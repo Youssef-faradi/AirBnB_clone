@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" The init module """
+"""Creates an unique FileStorage instance for AirBnB clone application."""
 from models.engine.file_storage import FileStorage
 
 
