@@ -1,8 +1,10 @@
 #!/usr/bin/python3
-"""Sub classes for BaseModel."""
+""" A module that contains the class BaseModel """
 from models.base_model import BaseModel
 
 
 class State(BaseModel):
-    """State class that's inherited from BaseModel."""
+    """
+        A class that inherits from BaseModel
+    """
     name = ""

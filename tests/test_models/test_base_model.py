@@ -1,163 +1,220 @@
 #!/usr/bin/python3
 """
-    A module that contains tests for the base_model module
+    Unittest cases for models/base_model.py.
 """
-import os
-import json
 import unittest
-import datetime
-from models import storage
+import models
+import json
+import os
+from time import sleep
 from models.base_model import BaseModel
+from datetime import datetime
+from uuid import UUID
 
 
-class tests_BaseModel(unittest.TestCase):
+class TestBaseModel(unittest.TestCase):
     """
-        A class for testing the BaseModel Class
+    Test cases for the BaseModel class in models/base_model.py.
     """
+    @classmethod
+    def setUp(self):
+        try:
+            os.rename("file.json", "tmp")
+        except IOError:
+            pass
 
-    def test_BaseModelType(self):
-        """ Testing the type of an instance of BaseModel"""
-        obj = BaseModel()
-        self.assertTrue(type(obj) is BaseModel)
-        self.assertIsInstance(obj, BaseModel)
-
-    # Testing ID
-    def test_ID(self):
-        """ Testing the type of ID """
-        obj = BaseModel()
-        self.assertIsNotNone(obj.id, True)
-        self.assertTrue(type(obj.id) is str)
-
-    def test_UUID(self):
-        """ Testing the uniquness of the ID """
-        obj1 = BaseModel()
-        obj2 = BaseModel()
-        self.assertTrue(obj1.id != obj2.id)
-
-    # Testing Attributes
-    def test_NewAttrs(self):
-        """ Testing the addition of new attributes and their types"""
-        obj = BaseModel()
-        obj.name = "Zidane"
-        obj.age = 24
-        obj.height = 178.2
-
-        self.assertIsNotNone(obj.name, True)
-        self.assertEqual(obj.name, "Zidane")
-        self.assertTrue(type(obj.name) is str)
-
-        self.assertIsNotNone(obj.age, True)
-        self.assertEqual(obj.age, 24)
-        self.assertTrue(type(obj.age) is int)
-
-        self.assertEqual(obj.height, 178.2)
-        self.assertIsNotNone(obj.height, True)
-        self.assertTrue(type(obj.height) is float)
-
-    def test_CreatedUpdated(self):
-        """ Testing the created_at and updated_at attributes """
-        obj = BaseModel()
-
-        self.assertIsNotNone(obj.created_at, True)
-        self.assertTrue(type(obj.created_at) is datetime.datetime)
-        self.assertIsInstance(obj.created_at, datetime.datetime)
-
-        self.assertIsNotNone(obj.updated_at, True)
-        self.assertTrue(type(obj.updated_at) is datetime.datetime)
-        self.assertIsInstance(obj.updated_at, datetime.datetime)
-
-    # Testing the __str__ method
-    def test_STR(self):
-        """ Testing the Str representation """
-        tmp = BaseModel.__dict__.get('__str__')
-        self.assertIsNotNone(tmp, True)
-
-        obj = BaseModel()
-        to_compare = f"[BaseModel] ({obj.id}) {obj.__dict__}"
-
-        self.assertIsNotNone(str(obj), True)
-        self.assertEqual(str(obj), to_compare)
-
-    # Testing Save method
-    def test_Save(self):
-        """ Testing the save method """
-        tmp = BaseModel.__dict__.get('save')
-        self.assertIsNotNone(tmp, True)
-
-        obj = BaseModel()
-        time = obj.updated_at
-        obj.save()
-
-        self.assertTrue(type(obj.updated_at) is datetime.datetime)
-        self.assertTrue((obj.updated_at == time) is False)
-
-    # Testing to_dict
-    def test_ToDict(self):
-        """ Testing the to_dict method """
-        tmp = BaseModel.__dict__.get('to_dict')
-        self.assertIsNotNone(tmp, True)
-
-        obj1 = BaseModel()
-        o_id = obj1.id
-        o_create = obj1.created_at.isoformat()
-        o_update = obj1.updated_at.isoformat()
-
-        o_dict = {'id': o_id, 'created_at': o_create, 'updated_at': o_update,
-                  '__class__': 'BaseModel'
-                  }
-        self.assertTrue(type(obj1.to_dict()) is dict)
-        self.assertEqual(obj1.to_dict(), o_dict)
-
-    def test_Kwargs(self):
-        """ Testing the creation of an instance from a dictionary """
-        o_id = "8a993912-5042-45f0-9362-b6a258e3ff92"
-        tmp_create = "2024-03-20T14:43:04.244039"
-        tmp_update = "2024-03-20T14:43:04.244043"
-        tmp = {'id': o_id, 'created_at': tmp_create, 'updated_at': tmp_update,
-               '__class__': 'Base', 'first_name': "Zidane", 'age': 24
-               }
-
-        obj = BaseModel(**tmp)
-
-        self.assertIsNotNone(obj.id, True)
-        self.assertTrue(type(obj.id) is str)
-        self.assertEqual(obj.id, o_id)
-
-        time = datetime.datetime.fromisoformat(tmp_create)
-        self.assertIsNotNone(obj.created_at, True)
-        self.assertTrue(type(obj.created_at) is datetime.datetime)
-        self.assertEqual(obj.created_at, time)
-
-        time = datetime.datetime.fromisoformat(tmp_update)
-        self.assertIsNotNone(obj.updated_at, True)
-        self.assertTrue(type(obj.updated_at) is datetime.datetime)
-        self.assertEqual(obj.updated_at, time)
-
-        self.assertIsNotNone(obj.__class__, True)
-        self.assertTrue(type(obj.__class__.__name__) is str)
-        self.assertEqual(obj.__class__.__name__, 'BaseModel')
-
-        self.assertIsNotNone(obj.first_name, True)
-        self.assertTrue(type(obj.first_name) is str)
-        self.assertEqual(obj.first_name, "Zidane")
-
-        self.assertIsNotNone(obj.age, True)
-        self.assertTrue(type(obj.age) is int)
-        self.assertEqual(obj.age, 24)
-
-        # Kwargs is empty case
-        tmp = {}
-        obj = BaseModel(**tmp)
-        to_compare = f"[BaseModel] ({obj.id}) {obj.__dict__}"
-        self.assertIsNotNone(str(obj), True)
-        self.assertEqual(str(obj), to_compare)
-
-    def test_KwargsNew(self):
-        """Testing the new method from storage if new inst not from a dict"""
-        if os.path.exists("file.json"):
+    @classmethod
+    def tearDown(self):
+        try:
             os.remove("file.json")
-        obj = BaseModel()
-        obj.save()
-        with open("file.json", 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        self.assertTrue(any(obj.id in key for key in data.keys()))
+        except IOError:
+            pass
+        try:
+            os.rename("tmp", "file.json")
+        except IOError:
+            pass
+
+    def test_no_args(self):
+        self.assertEqual(BaseModel, type(BaseModel()))
+
+    def test_new_instance_stored_in_objs(self):
+        self.assertIn(BaseModel(), models.storage.all().values())
+
+    def test_id_is_public_str(self):
+        self.assertEqual(str, type(BaseModel().id))
+
+    def test_created_at_is_public_datetime(self):
+        self.assertEqual(datetime, type(BaseModel().created_at))
+
+    def test_updated_at_is_public_datetime(self):
+        self.assertEqual(datetime, type(BaseModel().updated_at))
+
+    def test_two_models_unique_ids(self):
+        i1 = BaseModel()
+        i2 = BaseModel()
+        self.assertNotEqual(i1.id, i2.id)
+
+    def test_two_models_different_created_at(self):
+        i1 = BaseModel()
+        sleep(0.05)
+        i2 = BaseModel()
+        self.assertLess(i1.created_at, i2.created_at)
+
+    def test_two_models_different_updated_at(self):
+        i1 = BaseModel()
+        sleep(0.05)
+        i2 = BaseModel()
+        self.assertLess(i1.updated_at, i2.updated_at)
+
+    def test_str_representation(self):
+        dt = datetime.today()
+        dt_repr = repr(dt)
+        i = BaseModel()
+        i.id = "123"
+        i.created_at = i.updated_at = dt
+        istr = i.__str__()
+        self.assertIn("[BaseModel] (123)", istr)
+        self.assertIn("'id': '123'", istr)
+        self.assertIn("'created_at': " + dt_repr, istr)
+        self.assertIn("'updated_at': " + dt_repr, istr)
+
+    def test_args_unused(self):
+        i = BaseModel(None)
+        self.assertNotIn(None, i.__dict__.values())
+
+    def test_instantiation_with_kwargs(self):
+        dt = datetime.today()
+        dt_iso = dt.isoformat()
+        i = BaseModel(id="123", created_at=dt_iso, updated_at=dt_iso)
+        self.assertEqual(i.id, "123")
+        self.assertEqual(i.created_at, dt)
+        self.assertEqual(i.updated_at, dt)
+
+    def test_instantiation_with_None_kwargs(self):
+        with self.assertRaises(TypeError):
+            BaseModel(id=None, created_at=None, updated_at=None)
+
+    def test_instantiation_with_args_and_kwargs(self):
+        dt = datetime.today()
+        dt_iso = dt.isoformat()
+        i = BaseModel("12", id="123", created_at=dt_iso, updated_at=dt_iso)
+        self.assertEqual(i.id, "123")
+        self.assertEqual(i.created_at, dt)
+        self.assertEqual(i.updated_at, dt)
+
+    def test_one_save(self):
+        i = BaseModel()
+        sleep(0.05)
+        first_updated_at = i.updated_at
+        i.save()
+        self.assertLess(first_updated_at, i.updated_at)
+
+    def test_two_saves(self):
+        i = BaseModel()
+        sleep(0.05)
+        first_updated_at = i.updated_at
+        i.save()
+        second_updated_at = i.updated_at
+        self.assertLess(first_updated_at, second_updated_at)
+        sleep(0.05)
+        i.save()
+        self.assertLess(second_updated_at, i.updated_at)
+
+    def test_save_with_arg(self):
+        i = BaseModel()
+        with self.assertRaises(TypeError):
+            i.save(None)
+
+    def test_save_updates_file(self):
+        i = BaseModel()
+        i.save()
+        iid = "BaseModel." + i.id
+        with open("file.json", "r") as f:
+            self.assertIn(iid, f.read())
+
+    def test_kwargs(self):
+        """Kwargs test"""
+        i = BaseModel()
+        copy = i.to_dict()
+        new = BaseModel(**copy)
+        self.assertFalse(new is i)
+
+    def test_kwargs_int(self):
+        """Test kwargs int."""
+        i = BaseModel()
+        copy = i.to_dict()
+        copy.update({1: 2})
+        with self.assertRaises(TypeError):
+            new = BaseModel(**copy)
+
+    def test_str(self):
+        """Test str"""
+        i = BaseModel()
+        self.assertEqual(str(i), '[{}] ({}) {}'.format('BaseModel',
+                                                       i.id, i.__dict__))
+
+    def test_todict(self):
+        """BaseModel Class method test"""
+        i = BaseModel()
+        n = i.to_dict()
+        self.assertEqual(i.to_dict(), n)
+
+    def test_kwargs_none(self):
+        """BaseModel Class method test"""
+        n = {None: None}
+        with self.assertRaises(TypeError):
+            new = BaseModel(**n)
+
+    def test_updated_at(self):
+        """BaseModel Class method test"""
+        new = BaseModel()
+        self.assertEqual(type(new.updated_at), datetime)
+        n = new.to_dict()
+        new = BaseModel(**n)
+        self.assertTrue(new.created_at != new.updated_at)
+
+    def test_to_dict_type(self):
+        bm = BaseModel()
+        self.assertTrue(dict, type(bm.to_dict()))
+
+    def test_to_dict_contains_correct_keys(self):
+        bm = BaseModel()
+        self.assertIn("id", bm.to_dict())
+        self.assertIn("created_at", bm.to_dict())
+        self.assertIn("updated_at", bm.to_dict())
+        self.assertIn("__class__", bm.to_dict())
+
+    def test_to_dict_contains_added_attributes(self):
+        bm = BaseModel()
+        bm.name = "Holberton"
+        bm.my_number = 98
+        self.assertIn("name", bm.to_dict())
+        self.assertIn("my_number", bm.to_dict())
+
+    def test_to_dict_datetime_attributes_are_strs(self):
+        bm = BaseModel()
+        bm_dict = bm.to_dict()
+        self.assertEqual(str, type(bm_dict["created_at"]))
+        self.assertEqual(str, type(bm_dict["updated_at"]))
+
+    def test_to_dict_output(self):
+        dt = datetime.today()
+        bm = BaseModel()
+        bm.id = "123"
+        bm.created_at = bm.updated_at = dt
+        tdict = {
+            'id': '123',
+            '__class__': 'BaseModel',
+            'created_at': dt.isoformat(),
+            'updated_at': dt.isoformat()
+        }
+        self.assertDictEqual(bm.to_dict(), tdict)
+
+    def test_contrast_to_dict_dunder_dict(self):
+        bm = BaseModel()
+        self.assertNotEqual(bm.to_dict(), bm.__dict__)
+
+    def test_to_dict_with_arg(self):
+        bm = BaseModel()
+        with self.assertRaises(TypeError):
+            bm.to_dict(None)

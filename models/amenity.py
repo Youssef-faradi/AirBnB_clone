@@ -1,8 +1,10 @@
 #!/usr/bin/python3
-"""Sub classes for BaseModel."""
+""" A module that contains the class Amenity """
 from models.base_model import BaseModel
 
 
 class Amenity(BaseModel):
-    """Amenity class that's inherited from BaseModel."""
+    """
+        A class that inherits from BaseModel
+    """
     name = ""

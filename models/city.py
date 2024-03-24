@@ -1,9 +1,11 @@
 #!/usr/bin/python3
-"""Sub classes for BaseModel."""
+""" A module that contains the class City """
 from models.base_model import BaseModel
 
 
 class City(BaseModel):
-    """City class that's inherited from BaseModel."""
+    """
+        A class that inherits from BaseModel
+    """
     state_id = ""
     name = ""
