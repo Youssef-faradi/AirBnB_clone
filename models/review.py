@@ -1,12 +1,10 @@
-[200~#!/usr/bin/python3
-        """ A module that contains the class Review """
-        from models.base_model import BaseModel
+#!/usr/bin/python3
+"""Sub classes for BaseModel."""
+from models.base_model import BaseModel
 
 
-        class Review(BaseModel):
-            """
-                    A class that inherits from BaseModel
-                        """
-                            place_id = ""
-                                user_id = ""
-                                    text = ""
+class Review(BaseModel):
+    """Review class that's inherited from BaseModel."""
+    place_id = ""
+    user_id = ""
+    text = ""
